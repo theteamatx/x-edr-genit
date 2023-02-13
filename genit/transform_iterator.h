@@ -96,8 +96,8 @@ class TransformIterator
 
 // Deduction guide
 template <typename UnderlyingIter, typename UnaryFunc>
-TransformIterator(UnderlyingIter&&, UnaryFunc &&)
-    ->TransformIterator<std::decay_t<UnderlyingIter>, std::decay_t<UnaryFunc>>;
+TransformIterator(UnderlyingIter&&, UnaryFunc&&)
+    -> TransformIterator<std::decay_t<UnderlyingIter>, std::decay_t<UnaryFunc>>;
 
 // Factory function that conveniently creates a transform iterator object
 // using template argument deduction to infer the type of the underlying

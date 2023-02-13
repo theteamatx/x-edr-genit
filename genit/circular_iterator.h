@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 // This header file provides a class template (CircularIterator) which
 // implements a mechanism almost identical to Iterator except that it
 // allows for wrapping around the range, i.e., a "circular" iterator range.

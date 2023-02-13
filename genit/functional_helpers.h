@@ -42,7 +42,7 @@ class DereferencingCaller {
 #if __cplusplus >= 201703L
 // Deduction guide.
 template <typename Functor>
-DereferencingCaller(Functor&& func)->DereferencingCaller<Functor>;
+DereferencingCaller(Functor&& func) -> DereferencingCaller<Functor>;
 #endif  // __cplusplus >= 201703L
 
 // This class allows the user to extract the return and arguments types of a

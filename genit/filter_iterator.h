@@ -91,7 +91,7 @@ class FilterIterator
 // Deduction guide
 template <typename BaseIterator, typename Predicate>
 FilterIterator(BaseIterator&& it, BaseIterator&& end, Predicate&& predicate)
-    ->FilterIterator<std::decay_t<BaseIterator>, std::decay_t<Predicate>>;
+    -> FilterIterator<std::decay_t<BaseIterator>, std::decay_t<Predicate>>;
 
 template <typename BaseIterator, typename Predicate>
 auto MakeFilterIterator(BaseIterator&& it, BaseIterator&& end,

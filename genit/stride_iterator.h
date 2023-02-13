@@ -76,7 +76,7 @@ class StrideIterator
 
 // Deduction guide
 template <typename ValueType>
-StrideIterator(ValueType* ptr, int stride)->StrideIterator<ValueType>;
+StrideIterator(ValueType* ptr, int stride) -> StrideIterator<ValueType>;
 
 // Factory function that conveniently creates a stride iterator object
 // using template argument deduction to infer the type of the underlying
