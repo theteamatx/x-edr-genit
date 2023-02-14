@@ -267,10 +267,10 @@ TEST(TransformIteratorTest, IteratorToMember) {
   EXPECT_TRUE(
       (std::is_same_v<decltype(*MakeIteratorForMember<&Foo::i>(v.cbegin())),
                       const int&>));
-  EXPECT_FALSE(std::is_rvalue_reference_v<decltype(
-                   *MakeIteratorForMember<&Foo::i>(v.cbegin()))>);
-  EXPECT_TRUE(std::is_lvalue_reference_v<decltype(
-                  *MakeIteratorForMember<&Foo::i>(v.cbegin()))>);
+  EXPECT_FALSE(std::is_rvalue_reference_v<
+               decltype(*MakeIteratorForMember<&Foo::i>(v.cbegin()))>);
+  EXPECT_TRUE(std::is_lvalue_reference_v<
+              decltype(*MakeIteratorForMember<&Foo::i>(v.cbegin()))>);
 
   EXPECT_FALSE(it == it_end);
   EXPECT_TRUE(it != it_end);

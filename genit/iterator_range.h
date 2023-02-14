@@ -156,14 +156,10 @@ class IteratorRange {
   explicit operator bool() const { return begin_ != end_; }
 
   // Returns the front of the non-empty range
-  reference front() const {
-    return *begin_;
-  }
+  reference front() const { return *begin_; }
 
   // Return the element in the "at" position of this range.
-  reference operator[](difference_type at) const {
-    return begin_[at];
-  }
+  reference operator[](difference_type at) const { return begin_[at]; }
 
  private:
   // begin and end iterators
@@ -176,8 +172,9 @@ template <typename T>
 using PtrRange = IteratorRange<T*>;
 
 template <typename Range>
-using RangeIteratorType = std::decay_t<decltype(
-    iterator_range_detail::GetRangeBegin(std::declval<Range>()))>;
+using RangeIteratorType =
+    std::decay_t<decltype(iterator_range_detail::GetRangeBegin(
+        std::declval<Range>()))>;
 
 template <typename Range>
 using RangeValueType =
@@ -190,11 +187,11 @@ using RangeReferenceType =
 // Deduction guide
 template <typename Iterator>
 IteratorRange(Iterator&& b, Iterator&& e)
-    ->IteratorRange<std::decay_t<Iterator>>;
+    -> IteratorRange<std::decay_t<Iterator>>;
 
 // Deduction guide
 template <typename Range>
-IteratorRange(Range&& r)->IteratorRange<RangeIteratorType<Range>>;
+IteratorRange(Range&& r) -> IteratorRange<RangeIteratorType<Range>>;
 
 template <typename Iterator1T, typename Iterator2T>
 inline bool operator==(const IteratorRange<Iterator1T>& left,

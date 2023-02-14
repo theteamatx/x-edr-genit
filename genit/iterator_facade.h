@@ -205,7 +205,7 @@ bool IsValueInsideIterator(const DerivedIter&) {
 
 template <typename Derived, typename Reference, typename Category>
 typename IteratorFacade<Derived, Reference, Category>::reference
-    IteratorFacade<Derived, Reference, Category>::operator[](int i) const {
+IteratorFacade<Derived, Reference, Category>::operator[](int i) const {
   Derived adv_it = static_cast<const Derived&>(*this);
   IteratorFacadePrivateAccess<Derived>::Advance(&adv_it, i);
   assert(!iterator_facade_detail::IsValueInsideIterator<reference>(adv_it));

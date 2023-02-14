@@ -23,11 +23,11 @@
 #include <utility>
 #include <variant>
 
+#include "absl/types/variant.h"
+#include "absl/utility/utility.h"
 #include "genit/iterator_facade.h"
 #include "genit/iterator_range.h"
 #include "genit/zip_iterator.h"
-#include "absl/types/variant.h"
-#include "absl/utility/utility.h"
 
 namespace genit {
 
@@ -308,7 +308,8 @@ class ConcatRange {
 
 // Deduction guide
 template <typename... OtherRanges>
-ConcatRange(OtherRanges&&... ranges)->ConcatRange<std::decay_t<OtherRanges>...>;
+ConcatRange(OtherRanges&&... ranges)
+    -> ConcatRange<std::decay_t<OtherRanges>...>;
 
 // Convenience wrapper to concatenate a sequence of ranges.  Keeps a
 // light-weight copy to the supplied range (avoids a deep copy).  This works on

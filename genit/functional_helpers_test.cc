@@ -22,12 +22,12 @@
 #include <type_traits>
 #include <vector>
 
+#include "absl/functional/any_invocable.h"
+#include "absl/memory/memory.h"
 #include "genit/iterator_range.h"
 #include "genit/transform_iterator.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/functional/any_invocable.h"
-#include "absl/memory/memory.h"
 
 namespace genit {
 namespace {

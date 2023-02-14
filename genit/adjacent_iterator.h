@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 // This header file provides a class template (AdjacentIterator) that can be
 // used to transform an iterator into a set of N consecutive iterators packaged
 // as one which enables the traversal of a range of elements in groups of N
@@ -61,8 +60,8 @@ namespace adjacent_iterator_internal {
 
 // Rvalue iterator version
 template <typename UnderlyingIter, int N,
-          bool ContainsLValue = std::is_lvalue_reference_v<decltype(
-              *std::declval<UnderlyingIter>())>>
+          bool ContainsLValue = std::is_lvalue_reference_v<
+              decltype(*std::declval<UnderlyingIter>())>>
 struct ValueArrayProxyTraits {
   // Store data as a value and deliver it as a const-reference.
   using Storage = std::decay_t<decltype(*std::declval<UnderlyingIter>())>;

@@ -47,8 +47,8 @@ template <typename Category, typename Range>
 void ExpectIteratorCategory(Range&& range, Category&& category) {
   using std::begin;
   static_assert(
-      std::is_same<typename std::iterator_traits<decltype(
-                       begin(std::forward<Range>(range)))>::iterator_category,
+      std::is_same<typename std::iterator_traits<decltype(begin(
+                       std::forward<Range>(range)))>::iterator_category,
                    Category>::value,
       "");
 }

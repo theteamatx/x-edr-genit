@@ -22,9 +22,9 @@
 #include <type_traits>
 #include <utility>
 
+#include "absl/utility/utility.h"
 #include "genit/iterator_facade.h"
 #include "genit/iterator_range.h"
-#include "absl/utility/utility.h"
 
 namespace genit {
 
@@ -178,7 +178,7 @@ class ZipIterator : public IteratorFacade<
 
 // Deduction guide
 template <typename... OtherIters>
-ZipIterator(OtherIters... it)->ZipIterator<std::decay_t<OtherIters>...>;
+ZipIterator(OtherIters... it) -> ZipIterator<std::decay_t<OtherIters>...>;
 
 // Factory function that conveniently creates a zip iterator object
 // using template argument deduction to infer the types of the underlying

@@ -130,7 +130,6 @@ class BidirectionalIterator
   int* ptr_ = nullptr;
 };
 
-
 TEST(IteratorFacadeTest, CounterIterator) {
   CounterIterator it;
   CounterIterator it_end(5);

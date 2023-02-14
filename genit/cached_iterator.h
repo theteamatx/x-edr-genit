@@ -82,7 +82,7 @@ class CachedIterator
 
 // Deduction guide
 template <typename OtherIter>
-CachedIterator(OtherIter &&)->CachedIterator<std::decay_t<OtherIter>>;
+CachedIterator(OtherIter&&) -> CachedIterator<std::decay_t<OtherIter>>;
 
 // Factory function that conveniently creates a cached iterator object
 // using template argument deduction to infer the type of the underlying

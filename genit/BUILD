@@ -51,7 +51,6 @@ cc_test(
     ],
 )
 
-
 cc_test(
     name = "adjacent_iterator_test",
     srcs = [
@@ -121,9 +120,9 @@ cc_test(
     deps = [
         ":functional_helpers",
         ":iterators",
-        "@com_google_googletest//:gtest_main",
         "@com_google_absl//absl/functional:any_invocable",
         "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
