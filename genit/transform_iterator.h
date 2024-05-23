@@ -106,8 +106,9 @@ TransformIterator(UnderlyingIter&&, UnaryFunc&&)
 // f: The functor to convert from decltype(*it) to decltype(f(*it)).
 template <typename UnderlyingIter, typename UnaryFunc>
 auto MakeTransformIterator(UnderlyingIter&& it, UnaryFunc&& f) {
-  return TransformIterator(std::forward<UnderlyingIter>(it),
-                           std::forward<UnaryFunc>(f));
+  return TransformIterator<std::decay_t<UnderlyingIter>,
+                           std::decay_t<UnaryFunc>>(
+      std::forward<UnderlyingIter>(it), std::forward<UnaryFunc>(f));
 }
 
 // Factory function that conveniently creates a transform iterator range
@@ -120,18 +121,18 @@ template <typename Range, typename UnaryFunc>
 auto TransformRange(Range&& range, UnaryFunc&& f) {
   using std::begin;
   using std::end;
-  return IteratorRange(TransformIterator(begin(std::forward<Range>(range)),
-                                         std::forward<UnaryFunc>(f)),
-                       TransformIterator(end(std::forward<Range>(range)),
-                                         std::forward<UnaryFunc>(f)));
+  return IteratorRange(MakeTransformIterator(begin(std::forward<Range>(range)),
+                                             std::forward<UnaryFunc>(f)),
+                       MakeTransformIterator(end(std::forward<Range>(range)),
+                                             std::forward<UnaryFunc>(f)));
 }
 
 template <typename BaseIter, typename UnaryFunc>
 auto TransformRange(BaseIter&& first, BaseIter&& last, UnaryFunc&& f) {
-  return IteratorRange(TransformIterator(std::forward<BaseIter>(first),
-                                         std::forward<UnaryFunc>(f)),
-                       TransformIterator(std::forward<BaseIter>(last),
-                                         std::forward<UnaryFunc>(f)));
+  return IteratorRange(MakeTransformIterator(std::forward<BaseIter>(first),
+                                             std::forward<UnaryFunc>(f)),
+                       MakeTransformIterator(std::forward<BaseIter>(last),
+                                             std::forward<UnaryFunc>(f)));
 }
 
 namespace transform_iterator_detail {
@@ -187,8 +188,8 @@ struct StaticCastToType {
 // std::unordered_map into iterators that dereference to the key object.
 template <typename UnderlyingIter>
 auto MakeIteratorForFirstMember(UnderlyingIter&& it) {
-  return TransformIterator(std::forward<UnderlyingIter>(it),
-                           transform_iterator_detail::SelectFirstMember());
+  return MakeTransformIterator(std::forward<UnderlyingIter>(it),
+                               transform_iterator_detail::SelectFirstMember());
 }
 
 // Create a range of transform iterators that extract the first member in a
@@ -217,8 +218,8 @@ auto RangeOfFirstMember(BaseIter&& first, BaseIter&& last) {
 // std::unordered_map into iterators that dereference to the value object.
 template <typename UnderlyingIter>
 auto MakeIteratorForSecondMember(UnderlyingIter&& it) {
-  return TransformIterator(std::forward<UnderlyingIter>(it),
-                           transform_iterator_detail::SelectSecondMember());
+  return MakeTransformIterator(std::forward<UnderlyingIter>(it),
+                               transform_iterator_detail::SelectSecondMember());
 }
 
 // Create a range of transform iterators that extract the second member in a
@@ -248,8 +249,8 @@ auto RangeOfSecondMember(BaseIter&& first, BaseIter&& last) {
 // pointers point to.
 template <typename UnderlyingIter>
 auto MakeIteratorWithDereference(UnderlyingIter&& it) {
-  return TransformIterator(std::forward<UnderlyingIter>(it),
-                           transform_iterator_detail::DereferenceValue());
+  return MakeTransformIterator(std::forward<UnderlyingIter>(it),
+                               transform_iterator_detail::DereferenceValue());
 }
 
 // Create a range of transform iterators that performs an additional
@@ -278,7 +279,7 @@ auto RangeWithDereference(BaseIter&& first, BaseIter&& last) {
 //   auto it = MakeIteratorForMember<&Foo::member>(foo_vector.begin());
 template <auto MemberPointer, typename UnderlyingIter>
 auto MakeIteratorForMember(UnderlyingIter&& it) {
-  return TransformIterator(
+  return MakeTransformIterator(
       std::forward<UnderlyingIter>(it),
       transform_iterator_detail::SelectMember<MemberPointer>());
 }

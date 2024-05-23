@@ -202,14 +202,16 @@ inline bool operator==(const IteratorRange<Iterator1T>& left,
 // Construct an IteratorRange from two iterators
 template <typename IteratorT>
 inline auto MakeIteratorRange(IteratorT&& b, IteratorT&& e) {
-  return IteratorRange(std::forward<IteratorT>(b), std::forward<IteratorT>(e));
+  return IteratorRange<std::decay_t<IteratorT>>(std::forward<IteratorT>(b),
+                                                std::forward<IteratorT>(e));
 }
 
 // Construct an IteratorRange from a std::pair of iterators
 template <typename IteratorT>
 inline auto MakeIteratorRangeFromPair(
     std::pair<IteratorT, IteratorT>&& iter_pair) {
-  return IteratorRange(std::move(iter_pair.first), std::move(iter_pair.second));
+  return IteratorRange<std::decay_t<IteratorT>>(std::move(iter_pair.first),
+                                                std::move(iter_pair.second));
 }
 
 // Construct an IteratorRange from a Range containing the begin

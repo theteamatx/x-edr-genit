@@ -116,7 +116,7 @@ class CircularIterator
   UnderlyingIter it_begin_;
   UnderlyingIter it_end_;
   int winding_;
-};  // namespace utils
+};
 
 // Deduction guide
 template <typename Iter>
