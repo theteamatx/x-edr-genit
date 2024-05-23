@@ -21,14 +21,11 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
-#include <variant>
 
-#include "absl/types/variant.h"
 #include "absl/utility/utility.h"
 #include "genit/iterator_facade.h"
 #include "genit/iterator_range.h"
 #include "genit/zip_iterator.h"
-#include "iterator_range.h"
 
 namespace genit {
 
