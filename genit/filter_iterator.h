@@ -51,8 +51,7 @@ class FilterIterator
  public:
   template <typename Iterator, typename InputPredicate>
   FilterIterator(Iterator&& it, Iterator&& end, InputPredicate&& predicate)
-      : end_(std::forward<Iterator>(end)),
-        it_(std::forward<Iterator>(it)),
+      : end_(std::forward<Iterator>(end)), it_(std::forward<Iterator>(it)),
         pred_(std::forward<InputPredicate>(predicate)) {
     while (it_ != end_ && !pred_(*it_)) {
       ++it_;
@@ -96,21 +95,21 @@ FilterIterator(BaseIterator&& it, BaseIterator&& end, Predicate&& predicate)
 template <typename BaseIterator, typename Predicate>
 auto MakeFilterIterator(BaseIterator&& it, BaseIterator&& end,
                         Predicate&& pred) {
-  return FilterIterator(std::forward<BaseIterator>(it),
-                        std::forward<BaseIterator>(end),
-                        std::forward<Predicate>(pred));
+  return FilterIterator<std::decay_t<BaseIterator>, std::decay_t<Predicate>>(
+      std::forward<BaseIterator>(it), std::forward<BaseIterator>(end),
+      std::forward<Predicate>(pred));
 }
 
 template <typename Range, typename Predicate>
 auto FilterRange(Range&& range, Predicate&& pred) {
   using std::begin;
   using std::end;
-  return IteratorRange(FilterIterator(begin(std::forward<Range>(range)),
-                                      end(std::forward<Range>(range)),
-                                      std::forward<Predicate>(pred)),
-                       FilterIterator(end(std::forward<Range>(range)),
-                                      end(std::forward<Range>(range)),
-                                      std::forward<Predicate>(pred)));
+  return IteratorRange(MakeFilterIterator(begin(std::forward<Range>(range)),
+                                          end(std::forward<Range>(range)),
+                                          std::forward<Predicate>(pred)),
+                       MakeFilterIterator(end(std::forward<Range>(range)),
+                                          end(std::forward<Range>(range)),
+                                          std::forward<Predicate>(pred)));
 }
 
 }  // namespace genit
