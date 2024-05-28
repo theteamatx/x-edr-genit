@@ -188,7 +188,7 @@ ZipIterator(OtherIters... it) -> ZipIterator<std::decay_t<OtherIters>...>;
 //   auto zip_it = MakeZipIterator(v1.begin(), v2.begin());
 template <typename... UnderlyingIters>
 auto MakeZipIterator(UnderlyingIters&&... iters) {
-  return ZipIterator(std::forward<UnderlyingIters>(iters)...);
+  return ZipIterator<std::decay_t<UnderlyingIters>...>(std::forward<UnderlyingIters>(iters)...);
 }
 
 // Factory function that conveniently creates a zip iterator range
@@ -201,8 +201,8 @@ template <typename... Ranges>
 auto ZipRange(Ranges&&... ranges) {
   using std::begin;
   using std::end;
-  return IteratorRange(ZipIterator(begin(std::forward<Ranges>(ranges))...),
-                       ZipIterator(end(std::forward<Ranges>(ranges))...));
+  return IteratorRange(MakeZipIterator(begin(std::forward<Ranges>(ranges))...),
+                       MakeZipIterator(end(std::forward<Ranges>(ranges))...));
 }
 
 // Factory function that conveniently creates an enumerated iterator range

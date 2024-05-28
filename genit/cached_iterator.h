@@ -89,7 +89,8 @@ CachedIterator(OtherIter&&) -> CachedIterator<std::decay_t<OtherIter>>;
 // iterator.
 template <typename UnderlyingIter>
 auto MakeCachedIterator(UnderlyingIter&& it) {
-  return CachedIterator(std::forward<UnderlyingIter>(it));
+  return CachedIterator<std::decay_t<UnderlyingIter>>(
+      std::forward<UnderlyingIter>(it));
 }
 
 // Factory function that conveniently creates a cached iterator range
@@ -99,14 +100,14 @@ template <typename Range>
 auto CachedRange(Range&& range) {
   using std::begin;
   using std::end;
-  return IteratorRange(CachedIterator(begin(std::forward<Range>(range))),
-                       CachedIterator(end(std::forward<Range>(range))));
+  return IteratorRange(MakeCachedIterator(begin(std::forward<Range>(range))),
+                       MakeCachedIterator(end(std::forward<Range>(range))));
 }
 
 template <typename BaseIter>
 auto CachedRange(BaseIter&& first, BaseIter&& last) {
-  return IteratorRange(CachedIterator(std::forward<BaseIter>(first)),
-                       CachedIterator(std::forward<BaseIter>(last)));
+  return IteratorRange(MakeCachedIterator(std::forward<BaseIter>(first)),
+                       MakeCachedIterator(std::forward<BaseIter>(last)));
 }
 
 }  // namespace genit
