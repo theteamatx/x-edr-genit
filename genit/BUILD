@@ -32,6 +32,7 @@ cc_library(
         "filter_iterator.h",
         "iterator_facade.h",
         "iterator_range.h",
+        "nested_range.h",
         "stride_iterator.h",
         "transform_iterator.h",
         "zip_iterator.h",
@@ -144,6 +145,15 @@ cc_test(
     srcs = [
         "iterator_range_test.cc",
     ],
+    deps = [
+        ":iterators",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "nested_range_test",
+    srcs = ["nested_range_test.cc"],
     deps = [
         ":iterators",
         "@com_google_googletest//:gtest_main",
