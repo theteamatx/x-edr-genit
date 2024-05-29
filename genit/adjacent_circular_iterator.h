@@ -41,6 +41,7 @@
 
 #include "genit/adjacent_iterator.h"
 #include "genit/iterator_facade.h"
+#include "genit/iterator_range.h"
 
 namespace genit {
 
@@ -59,6 +60,9 @@ class AdjacentCircularIterator
           adjacent_iterator_internal::ValueArrayProxy<UnderlyingIter, N>,
           typename std::iterator_traits<UnderlyingIter>::iterator_category> {
  public:
+  static_assert(N > 0,
+                "Number of adjacent elements must be greater than zero!");
+
   // Constructs an adjacent iterator from an underlying iterator range.
   // The winding number specifies which turn this corresponds to. So, in the
   // usual case, if you want to iterate one turn around
@@ -151,6 +155,36 @@ class AdjacentCircularIterator
   int winding_;
 };
 
+// AdjacentElementsCircularRangeT wraps a range and transforms the iterators
+// into adjacent circular iterators of N-arity.
+template <typename BaseRange, int N>
+class AdjacentElementsCircularRangeT
+    : public AliasRangeFacade<
+          AdjacentElementsCircularRangeT<BaseRange, N>, BaseRange,
+          AdjacentCircularIterator<RangeIteratorType<BaseRange>, N>> {
+ public:
+  static_assert(N > 0,
+                "Number of adjacent elements must be greater than zero!");
+  using AdjIter = AdjacentCircularIterator<RangeIteratorType<BaseRange>, N>;
+  using AliasRangeFacade<AdjacentElementsCircularRangeT<BaseRange, N>,
+                         BaseRange, AdjIter>::AliasRangeFacade;
+
+ private:
+  friend class AliasRangeFacadePrivateAccess<
+      AdjacentElementsCircularRangeT<BaseRange, N>>;
+
+  auto Begin(const BaseRange& base_range) const {
+    using std::begin;
+    using std::end;
+    return AdjIter(begin(base_range), end(base_range));
+  }
+  auto End(const BaseRange& base_range) const {
+    using std::begin;
+    using std::end;
+    return AdjIter(begin(base_range), end(base_range), 1);
+  }
+};
+
 // This convenient wrapper function produces a range of adjacent circular
 // iterators from a given range. See AdjacentCircularIterator above.
 //
@@ -158,13 +192,9 @@ class AdjacentCircularIterator
 // return an empty range.
 template <int N, typename Range>
 auto AdjacentElementsCircularRange(Range&& range) {
-  static_assert(N > 0,
-                "Number of adjacent elements must be greater than zero!");
-  using std::begin;
-  using std::end;
-  using AdjIter = AdjacentCircularIterator<decltype(begin(range)), N>;
-  return IteratorRange(AdjIter(begin(range), end(range)),
-                       AdjIter(begin(range), end(range), 1));
+  return AdjacentElementsCircularRangeT<
+      decltype(MoveOrAliasRange(std::forward<Range>(range))), N>(
+      MoveOrAliasRange(std::forward<Range>(range)));
 }
 
 // This convenient wrapper function produces a range of adjacent circular
@@ -175,10 +205,7 @@ auto AdjacentElementsCircularRange(Range&& range) {
 // return an empty range.
 template <int N, typename Iter>
 auto AdjacentElementsCircularRange(const Iter& first, const Iter& last) {
-  static_assert(N > 0,
-                "Number of adjacent elements must be greater than zero!");
-  using AdjIter = AdjacentCircularIterator<std::decay_t<Iter>, N>;
-  return IteratorRange(AdjIter(first, last), AdjIter(first, last, 1));
+  return AdjacentElementsCircularRange<N>(MakeIteratorRange(first, last));
 }
 
 }  // namespace genit

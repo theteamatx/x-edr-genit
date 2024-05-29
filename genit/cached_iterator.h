@@ -93,21 +93,42 @@ auto MakeCachedIterator(UnderlyingIter&& it) {
       std::forward<UnderlyingIter>(it));
 }
 
+// CachedRangeT wraps a range and transforms the iterators into
+// cached iterators (see `CachedIterator`.
+template <typename BaseRange>
+class CachedRangeT
+    : public AliasRangeFacade<CachedRangeT<BaseRange>, BaseRange,
+                              CachedIterator<RangeIteratorType<BaseRange>>> {
+ public:
+  using CachedIter = CachedIterator<RangeIteratorType<BaseRange>>;
+  using AliasRangeFacade<CachedRangeT<BaseRange>, BaseRange,
+                         CachedIter>::AliasRangeFacade;
+
+ private:
+  friend class AliasRangeFacadePrivateAccess<CachedRangeT<BaseRange>>;
+
+  auto Begin(const BaseRange& base_range) const {
+    using std::begin;
+    return CachedIter(begin(base_range));
+  }
+  auto End(const BaseRange& base_range) const {
+    using std::end;
+    return CachedIter(end(base_range));
+  }
+};
+
 // Factory function that conveniently creates a cached iterator range
 // using template argument deduction to infer the type of the underlying
 // iterator and unary functor.
 template <typename Range>
 auto CachedRange(Range&& range) {
-  using std::begin;
-  using std::end;
-  return IteratorRange(MakeCachedIterator(begin(std::forward<Range>(range))),
-                       MakeCachedIterator(end(std::forward<Range>(range))));
+  return CachedRangeT<decltype(MoveOrAliasRange(std::forward<Range>(range)))>(
+      MoveOrAliasRange(std::forward<Range>(range)));
 }
 
 template <typename BaseIter>
 auto CachedRange(BaseIter&& first, BaseIter&& last) {
-  return IteratorRange(MakeCachedIterator(std::forward<BaseIter>(first)),
-                       MakeCachedIterator(std::forward<BaseIter>(last)));
+  return CachedRange(MakeIteratorRange(first, last));
 }
 
 }  // namespace genit

@@ -282,6 +282,35 @@ class AdjacentIterator
   int offset_;
 };
 
+// AdjacentElementsRangeT wraps a range and transforms the iterators into
+// adjacent iterators of N-arity.
+template <typename BaseRange, int N>
+class AdjacentElementsRangeT
+    : public AliasRangeFacade<
+          AdjacentElementsRangeT<BaseRange, N>, BaseRange,
+          AdjacentIterator<RangeIteratorType<BaseRange>, N>> {
+ public:
+  static_assert(N > 0,
+                "Number of adjacent elements must be greater than zero!");
+  using AdjIter = AdjacentIterator<RangeIteratorType<BaseRange>, N>;
+  using AliasRangeFacade<AdjacentElementsRangeT<BaseRange, N>, BaseRange,
+                         AdjIter>::AliasRangeFacade;
+
+ private:
+  friend class AliasRangeFacadePrivateAccess<
+      AdjacentElementsRangeT<BaseRange, N>>;
+
+  auto Begin(const BaseRange& base_range) const {
+    using std::begin;
+    using std::end;
+    return AdjIter(begin(base_range), end(base_range));
+  }
+  auto End(const BaseRange& base_range) const {
+    using std::end;
+    return AdjIter(end(base_range));
+  }
+};
+
 // This convenient wrapper function produces a range of adjacent iterators
 // from a given range. See AdjacentIterator above.
 //
@@ -289,12 +318,9 @@ class AdjacentIterator
 // return an empty range.
 template <int N, typename Range>
 auto AdjacentElementsRange(Range&& range) {
-  static_assert(N > 0,
-                "Number of adjacent elements must be greater than zero!");
-  using std::begin;
-  using std::end;
-  using AdjIter = AdjacentIterator<decltype(begin(range)), N>;
-  return IteratorRange(AdjIter(begin(range), end(range)), AdjIter(end(range)));
+  return AdjacentElementsRangeT<
+      decltype(MoveOrAliasRange(std::forward<Range>(range))), N>(
+      MoveOrAliasRange(std::forward<Range>(range)));
 }
 
 // This convenient wrapper function produces a range of adjacent iterators
@@ -304,10 +330,7 @@ auto AdjacentElementsRange(Range&& range) {
 // return an empty range.
 template <int N, typename Iter>
 auto AdjacentElementsRange(const Iter& first, const Iter& last) {
-  static_assert(N > 0,
-                "Number of adjacent elements must be greater than zero!");
-  using AdjIter = AdjacentIterator<std::decay_t<Iter>, N>;
-  return IteratorRange(AdjIter(first, last), AdjIter(last));
+  return AdjacentElementsRange<N>(MakeIteratorRange(first, last));
 }
 
 }  // namespace genit

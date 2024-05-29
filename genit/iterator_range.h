@@ -184,6 +184,14 @@ template <typename Range>
 using RangeReferenceType =
     typename std::iterator_traits<RangeIteratorType<Range>>::reference;
 
+// Replacement for std::decay_t to handle special cases:
+//  T(&)[N] decays to T*, replaced by PtrRange<T>
+template <typename UndecayedRange>
+using RangeDecayType =
+    std::conditional_t<std::is_pointer_v<std::decay_t<UndecayedRange>>,
+                       IteratorRange<std::decay_t<UndecayedRange>>,
+                       std::decay_t<UndecayedRange>>;
+
 // Deduction guide
 template <typename Iterator>
 IteratorRange(Iterator&& b, Iterator&& e)
@@ -222,15 +230,185 @@ inline auto MakeIteratorRange(ForwardRange&& r) {
   return IteratorRange<decltype(begin(std::forward<ForwardRange>(r)))>(r);
 }
 
-// Construct a reversed IteratorRange from a Range containing the begin
-// and end iterators.
+// Befriend this class in the implementation of a Derived class to be used
+// with AliasRangeFacade (see below).
+template <typename Derived>
+class AliasRangeFacadePrivateAccess {
+ public:
+  // Implementation of the IteratorFacade requirements:
+  template <typename BaseRange>
+  static auto Begin(const Derived& lhs, const BaseRange& base_range) {
+    return lhs.Begin(base_range);
+  }
+  template <typename BaseRange>
+  static auto End(const Derived& lhs, const BaseRange& base_range) {
+    return lhs.End(base_range);
+  }
+};
+
+// AliasRangeFacade facilitates the creation of ranges by storing a range from
+// which begin and end iterators can be obtained via a derived type (i.e., CRTP:
+// curiously recurring template pattern).
+//
+// It provides a collection interface, so it is possible to pass an instance
+//  to an algorithm requiring a collection as an input.
+template <typename Derived, typename BaseRange,
+          typename IteratorT = RangeIteratorType<BaseRange>>
+class AliasRangeFacade {
+ public:
+  // This type
+  using this_type = AliasRangeFacade<Derived, BaseRange, IteratorT>;
+
+  // Iterator type.
+  using iterator = IteratorT;
+
+  // There is no distinction between const_iterator and iterator.
+  // These typedefs are provided to fulfill container interface
+  using const_iterator = iterator;
+
+  // Encapsulated value type
+  using value_type = typename std::iterator_traits<iterator>::value_type;
+
+  // Difference type
+  using difference_type =
+      typename std::iterator_traits<iterator>::difference_type;
+
+  // Size type
+  using size_type = std::size_t;
+
+  // Reference type
+  // Needed because value_type is the same for const and non-const
+  // iterators
+  using reference = typename std::iterator_traits<iterator>::reference;
+
+  // Constructor from a Range
+  template <typename OtherRange>
+  explicit AliasRangeFacade(OtherRange&& r)
+      : base_range_(std::forward<OtherRange>(r)) {}
+
+  // Default assignment operator
+  AliasRangeFacade& operator=(const AliasRangeFacade&) = default;
+  AliasRangeFacade& operator=(AliasRangeFacade&&) = default;
+  AliasRangeFacade(const AliasRangeFacade&) = default;
+  AliasRangeFacade(AliasRangeFacade&&) = default;
+
+  // Return the begin iterator
+  auto begin() const {
+    return AliasRangeFacadePrivateAccess<Derived>::Begin(
+        static_cast<const Derived&>(*this), base_range_);
+  }
+
+  // Return the end iterator
+  auto end() const {
+    return AliasRangeFacadePrivateAccess<Derived>::End(
+        static_cast<const Derived&>(*this), base_range_);
+  }
+
+  // Return the size of the range
+  difference_type size() const { return std::distance(begin(), end()); }
+
+  // Return whether the range is empty
+  bool empty() const { return begin() == end(); }
+
+  // Cast the range to a bool, so it can be used in conditionals
+  explicit operator bool() const { return begin() != end(); }
+
+  // Returns the front of the non-empty range
+  reference front() const { return *begin(); }
+
+  // Return the element in the "at" position of this range.
+  reference operator[](difference_type at) const {
+    return *std::advance(begin(), at);
+  }
+
+ protected:
+  // base range
+  BaseRange base_range_;
+};
+
+template <typename Derived1, typename BaseRange1, typename IteratorT1,
+          typename Derived2, typename BaseRange2, typename IteratorT2>
+inline bool operator==(
+    const AliasRangeFacade<Derived1, BaseRange1, IteratorT1>& left,
+    const AliasRangeFacade<Derived2, BaseRange2, IteratorT2>& right) {
+  return iterator_range_detail::Equal(left, right);
+}
+
+// WrappedRange is just a wrapper around a range, stores it by value (copy), and
+// provides a collection and range interface, so it is possible to pass an
+// instance to an algorithm requiring a collection as an input.
+template <typename BaseRange>
+class WrappedRange
+    : public AliasRangeFacade<WrappedRange<BaseRange>, BaseRange> {
+ public:
+  using AliasRangeFacade<WrappedRange<BaseRange>, BaseRange>::AliasRangeFacade;
+
+ private:
+  friend class AliasRangeFacadePrivateAccess<WrappedRange<BaseRange>>;
+
+  auto Begin(const BaseRange& base_range) const {
+    using std::begin;
+    return begin(base_range);
+  }
+  auto End(const BaseRange& base_range) const {
+    using std::end;
+    return end(base_range);
+  }
+};
+
+// Construct a wrapped range from a given range.
+template <typename Range>
+inline auto WrapRange(Range&& r) {
+  return WrappedRange<RangeDecayType<Range>>(std::forward<Range>(r));
+}
+
+// Move or alias a given range.
+// Move rvalue ranges, but alias lvalue ranges (cf. ref-wrapper).
+template <typename Range>
+inline RangeDecayType<Range> MoveOrAliasRange(Range&& r) {
+  return std::move(r);
+}
+template <typename Range>
+inline RangeDecayType<Range> MoveOrAliasRange(const Range&& r) {
+  return std::move(r);
+}
+template <typename Range>
+inline auto MoveOrAliasRange(Range& r) {
+  return MakeIteratorRange(r);
+}
+template <typename Range>
+inline auto MoveOrAliasRange(const Range& r) {
+  return MakeIteratorRange(r);
+}
+
+// ReversedRange wraps a range and reverses the iterators.
+template <typename BaseRange>
+class ReversedRange : public AliasRangeFacade<
+                          ReversedRange<BaseRange>, BaseRange,
+                          std::reverse_iterator<RangeIteratorType<BaseRange>>> {
+ public:
+  using RevIter = std::reverse_iterator<RangeIteratorType<BaseRange>>;
+  using AliasRangeFacade<ReversedRange<BaseRange>, BaseRange,
+                         RevIter>::AliasRangeFacade;
+
+ private:
+  friend class AliasRangeFacadePrivateAccess<ReversedRange<BaseRange>>;
+
+  auto Begin(const BaseRange& base_range) const {
+    using std::end;
+    return RevIter(end(base_range));
+  }
+  auto End(const BaseRange& base_range) const {
+    using std::begin;
+    return RevIter(begin(base_range));
+  }
+};
+
+// Construct a reversed range from a given range.
 template <typename Range>
 inline auto ReverseRange(Range&& r) {
-  using std::begin;
-  using std::end;
-  return IteratorRange<
-      std::reverse_iterator<decltype(begin(std::forward<Range>(r)))>>(
-      end(std::forward<Range>(r)), begin(std::forward<Range>(r)));
+  return ReversedRange<decltype(MoveOrAliasRange(std::forward<Range>(r)))>(
+      MoveOrAliasRange(std::forward<Range>(r)));
 }
 
 // Construct a new sequence of the specified type from the elements

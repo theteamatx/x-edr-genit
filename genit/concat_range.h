@@ -309,22 +309,21 @@ class ConcatRange {
 // Deduction guide
 template <typename... OtherRanges>
 ConcatRange(OtherRanges&&... ranges)
-    -> ConcatRange<std::decay_t<OtherRanges>...>;
+    -> ConcatRange<RangeDecayType<OtherRanges>...>;
 
 // Deduction function to create ConcatRange for older compilers (gcc<11).
 template <typename... OtherRanges>
 auto MakeConcatRange(OtherRanges&&... ranges) {
-  return ConcatRange<std::decay_t<OtherRanges>...>(
+  return ConcatRange<RangeDecayType<OtherRanges>...>(
       std::forward<OtherRanges>(ranges)...);
 }
 
-// Convenience wrapper to concatenate a sequence of ranges.  Keeps a
-// light-weight copy to the supplied range (avoids a deep copy).  This works on
-// ranges on which calling MakeIteratorRange() makes sense.
+// Convenience wrapper to concatenate a sequence of ranges. Keeps a
+// iterator pairs to the supplied ranges if they are lvalue references.
+// Makes a copy/move of the supplied ranges if they are rvalue references.
 template <typename... Containers>
 auto ConcatenateRanges(Containers&&... ranges) {
-  return MakeConcatRange(
-      MakeIteratorRange(std::forward<Containers>(ranges))...);
+  return MakeConcatRange(MoveOrAliasRange(std::forward<Containers>(ranges))...);
 }
 
 }  // namespace genit

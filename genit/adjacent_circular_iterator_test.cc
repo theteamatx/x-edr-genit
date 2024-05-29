@@ -244,8 +244,7 @@ TEST(AdjacentCircularIteratorTest, TripleIteratorNonAssignableType) {
   auto get_non_assignable = [](int) { return NonAssignableType(); };
 
   auto triplet_range = AdjacentElementsCircularRange<3>(
-      MakeTransformIterator(IndexIterator(0), std::cref(get_non_assignable)),
-      MakeTransformIterator(IndexIterator(5), std::cref(get_non_assignable)));
+      TransformRange(IndexRange(0, 5), get_non_assignable));
 
   for (auto triplet : triplet_range) {
     EXPECT_EQ(triplet.size(), 3);
@@ -261,15 +260,16 @@ TEST(AdjacentCircularIteratorTest, EmptyRangeIfRangeTooSmall) {
 TEST(AdjacentCircularIteratorTest, TwoPassesBothDirections) {
   const int values[] = {1, 2, 3, 4, 5};
   auto range = AdjacentElementsCircularRange<2>(values);
-  range = IteratorRange(range.begin(), range.end() + std::size(values));
+  auto two_turns =
+      IteratorRange(range.begin(), range.end() + std::size(values));
 
   int counter = 0;
-  for (const auto pair : range) {
+  for (const auto pair : two_turns) {
     EXPECT_EQ(pair.front(), 1 + (counter % 5));
     ++counter;
   }
   EXPECT_EQ(counter, 2 * std::size(values));
-  for (const auto pair : ReverseRange(range)) {
+  for (const auto pair : ReverseRange(two_turns)) {
     --counter;
     EXPECT_EQ(pair.front(), 1 + (counter % 5));
   }

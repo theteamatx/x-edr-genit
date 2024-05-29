@@ -29,8 +29,9 @@ TEST(TransformIteratorTest, SquaringIterator) {
 
   auto squaring_func = [](int i) { return i * i; };
 
-  auto it = MakeTransformIterator(v.begin(), std::cref(squaring_func));
-  auto it_end = MakeTransformIterator(v.end(), std::cref(squaring_func));
+  auto t_range = TransformRange(v, squaring_func);
+  auto it = t_range.begin();
+  auto it_end = t_range.end();
 
   EXPECT_TRUE((std::is_same_v<decltype(*it), int>));
   EXPECT_FALSE(std::is_rvalue_reference_v<decltype(*it)>);
@@ -82,8 +83,9 @@ TEST(TransformIteratorTest, IteratorForFirstMember) {
   m[3] = 9;
   m[4] = 16;
 
-  auto it = MakeIteratorForFirstMember(m.begin());
-  auto it_end = MakeIteratorForFirstMember(m.end());
+  auto t_range = RangeOfFirstMember(m);
+  auto it = t_range.begin();
+  auto it_end = t_range.end();
 
   EXPECT_TRUE((std::is_same_v<decltype(*it), const int&>));
   EXPECT_FALSE(std::is_rvalue_reference_v<decltype(*it)>);
@@ -133,8 +135,9 @@ TEST(TransformIteratorTest, IteratorForSecondMember) {
   m[3] = 9;
   m[4] = 16;
 
-  auto it = MakeIteratorForSecondMember(m.begin());
-  auto it_end = MakeIteratorForSecondMember(m.end());
+  auto t_range = RangeOfSecondMember(m);
+  auto it = t_range.begin();
+  auto it_end = t_range.end();
 
   EXPECT_TRUE((std::is_same_v<decltype(*it), int&>));
   EXPECT_FALSE((std::is_same_v<decltype(*it), int>));
@@ -181,8 +184,9 @@ TEST(TransformIteratorTest, IteratorWithDereference) {
   int arr[] = {0, 1, 2, 3, 4};
   std::vector<int*> v = {arr, arr + 1, arr + 2, arr + 3, arr + 4};
 
-  auto it = MakeIteratorWithDereference(v.begin());
-  auto it_end = MakeIteratorWithDereference(v.end());
+  auto t_range = RangeWithDereference(v);
+  auto it = t_range.begin();
+  auto it_end = t_range.end();
 
   EXPECT_TRUE((std::is_same_v<decltype(*it), int&>));
   EXPECT_FALSE(std::is_rvalue_reference_v<decltype(*it)>);
@@ -244,8 +248,9 @@ TEST(TransformIteratorTest, IteratorToMember) {
   };
   std::vector<Foo> v = {{0}, {1}, {2}, {3}, {4}};
 
-  auto it = MakeIteratorForMember<&Foo::i>(v.begin());
-  auto it_end = MakeIteratorForMember<&Foo::i>(v.end());
+  auto t_range = RangeOfMember<&Foo::i>(v);
+  auto it = t_range.begin();
+  auto it_end = t_range.end();
 
   // Test non-const lvalue reference.
   EXPECT_TRUE((std::is_same_v<decltype(*it), int&>));
@@ -253,24 +258,17 @@ TEST(TransformIteratorTest, IteratorToMember) {
   EXPECT_TRUE(std::is_lvalue_reference_v<decltype(*it)>);
 
   // Test rvalue reference.
-  EXPECT_TRUE((std::is_same_v<decltype(*MakeIteratorForMember<&Foo::i>(
-                                  std::make_move_iterator(v.begin()))),
-                              int&&>));
-  EXPECT_TRUE(
-      std::is_rvalue_reference_v<decltype(*MakeIteratorForMember<&Foo::i>(
-          std::make_move_iterator(v.begin())))>);
-  EXPECT_FALSE(
-      std::is_lvalue_reference_v<decltype(*MakeIteratorForMember<&Foo::i>(
-          std::make_move_iterator(v.begin())))>);
+  auto mov_range = RangeOfMember<&Foo::i>(std::make_move_iterator(v.begin()),
+                                          std::make_move_iterator(v.end()));
+  EXPECT_TRUE((std::is_same_v<decltype(*mov_range.begin()), int&&>));
+  EXPECT_TRUE(std::is_rvalue_reference_v<decltype(*mov_range.begin())>);
+  EXPECT_FALSE(std::is_lvalue_reference_v<decltype(*mov_range.begin())>);
 
   // Test const lvalue reference.
-  EXPECT_TRUE(
-      (std::is_same_v<decltype(*MakeIteratorForMember<&Foo::i>(v.cbegin())),
-                      const int&>));
-  EXPECT_FALSE(std::is_rvalue_reference_v<
-               decltype(*MakeIteratorForMember<&Foo::i>(v.cbegin()))>);
-  EXPECT_TRUE(std::is_lvalue_reference_v<
-              decltype(*MakeIteratorForMember<&Foo::i>(v.cbegin()))>);
+  auto cnst_range = RangeOfMember<&Foo::i>(v.cbegin(), v.cend());
+  EXPECT_TRUE((std::is_same_v<decltype(*cnst_range.begin()), const int&>));
+  EXPECT_FALSE(std::is_rvalue_reference_v<decltype(*cnst_range.begin())>);
+  EXPECT_TRUE(std::is_lvalue_reference_v<decltype(*cnst_range.begin())>);
 
   EXPECT_FALSE(it == it_end);
   EXPECT_TRUE(it != it_end);
