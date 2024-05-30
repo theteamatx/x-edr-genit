@@ -75,7 +75,7 @@ TEST(FilterIteratorTest, EmptyRangeOnFalsePredicate) {
 TEST(FilterIteratorTest, LambdaPredicate) {
   const int xs[] = {1, 2, 3, 4, 5};
   auto predicate = [](int x) { return false; };
-  const auto empty = FilterRange(xs, std::cref(predicate));
+  const auto empty = FilterRange(xs, predicate);
   EXPECT_EQ(empty.begin(), empty.end());
   const auto other_empty = FilterRange(xs, std::function<bool(int)>(predicate));
   EXPECT_EQ(other_empty.begin(), other_empty.end());
@@ -160,8 +160,9 @@ TEST(FilterIteratorTest, IteratorCategory) {
 
   std::istringstream input("Some input");
   ExpectIteratorCategory(
-      MakeFilterIterator(std::istream_iterator<char>(input),
-                         std::istream_iterator<char>(), TruePredicate{}),
+      begin(FilterRange(MakeIteratorRange(std::istream_iterator<char>(input),
+                                          std::istream_iterator<char>()),
+                        TruePredicate{})),
       std::input_iterator_tag{});
 }
 

@@ -45,28 +45,25 @@
 
 namespace genit {
 
-// This class template implements an iterator which allows wrapping around the
-// range for a specified number of times.
-//
-// UnderlyingIter is the type of the underlying iterator that the
-// iterator uses to iterate the range.
-template <typename UnderlyingIter>
+template <typename BaseRange>
 class CircularIterator
     : public IteratorFacade<
-          CircularIterator<UnderlyingIter>,
-          decltype(*std::declval<UnderlyingIter>()),
-          typename std::iterator_traits<UnderlyingIter>::iterator_category> {
+          CircularIterator<BaseRange>,
+          decltype(*std::declval<RangeIteratorType<BaseRange>>()),
+          typename std::iterator_traits<
+              RangeIteratorType<BaseRange>>::iterator_category> {
  public:
   // Constructs an  iterator from an underlying iterator range.
   // The winding number specifies which turn this corresponds to. So, in the
   // usual case, if you want to iterate one turn around
   // the range [first, last), you would create iter(first, last, 0) for begin
   // and iter(first, last, 1) for end.
-  CircularIterator(const UnderlyingIter& it, const UnderlyingIter& it_end,
-                   int winding = 0)
-      : base_iter_(it), it_begin_(it), it_end_(it_end), winding_(winding) {
+  explicit CircularIterator(const BaseRange* base_range, int winding = 0)
+      : base_iter_(base_range->begin()),
+        base_range_(base_range),
+        winding_(winding) {
     // For empty range, normalize winding number to 0 to simplify comparison.
-    if (it_begin_ == it_end_) {
+    if (BaseBegin() == BaseEnd()) {
       winding_ = 0;
     }
   }
@@ -76,20 +73,30 @@ class CircularIterator
 
   friend class IteratorFacadePrivateAccess<CircularIterator>;
 
-  using Reference = decltype(*std::declval<UnderlyingIter>());
+  using BaseIter = RangeIteratorType<BaseRange>;
+  using Reference = decltype(*std::declval<BaseIter>());
+
+  BaseIter BaseBegin() const {
+    using std::begin;
+    return begin(*base_range_);
+  }
+  BaseIter BaseEnd() const {
+    using std::end;
+    return end(*base_range_);
+  }
 
   Reference Dereference() const { return *base_iter_; }
   void Increment() {
     ++base_iter_;
-    if (base_iter_ == it_end_) {
-      base_iter_ = it_begin_;
+    if (base_iter_ == BaseEnd()) {
+      base_iter_ = BaseBegin();
       ++winding_;
     }
   }
   void Decrement() {
-    if (base_iter_ == it_begin_) {
+    if (base_iter_ == BaseBegin()) {
       --winding_;
-      base_iter_ = it_end_;
+      base_iter_ = BaseEnd();
     }
     --base_iter_;
   }
@@ -98,30 +105,68 @@ class CircularIterator
   }
   int DistanceTo(const CircularIterator& rhs) const {
     return (rhs.base_iter_ - base_iter_) +
-           (rhs.winding_ - winding_) * (it_end_ - it_begin_);
+           (rhs.winding_ - winding_) * (BaseEnd() - BaseBegin());
   }
   void Advance(int n) {
     base_iter_ += n;
-    const int distance_from_begin = base_iter_ - it_begin_;
-    const int range_size = it_end_ - it_begin_;
+    const int distance_from_begin = base_iter_ - BaseBegin();
+    const int range_size = BaseEnd() - BaseBegin();
     // Apply % twice to allow for negative distances.
     base_iter_ =
-        it_begin_ +
+        BaseBegin() +
         (((distance_from_begin % range_size) + range_size) % range_size);
     winding_ += distance_from_begin / range_size;
   }
 
   // Stores the set of  iterators.
-  UnderlyingIter base_iter_;
-  UnderlyingIter it_begin_;
-  UnderlyingIter it_end_;
+  BaseIter base_iter_;
+  const BaseRange* base_range_;
   int winding_;
 };
 
-// Deduction guide
-template <typename Iter>
-CircularIterator(Iter&& begin, Iter&& end)
-    -> CircularIterator<std::decay_t<Iter>>;
+// This class template implements a range which allows wrapping around the
+// underlying range for a specified number of times.
+//
+// BaseRange is the type of the underlying range to circle over.
+template <typename BaseRange>
+class CircularRangeT
+    : public AliasRangeFacade<CircularRangeT<BaseRange>, BaseRange,
+                              CircularIterator<BaseRange>> {
+ public:
+  using CircIter = CircularIterator<BaseRange>;
+  using BaseFacade =
+      AliasRangeFacade<CircularRangeT<BaseRange>, BaseRange, CircIter>;
+
+  // Constructor from a Range
+  template <typename OtherRange>
+  explicit CircularRangeT(OtherRange&& r, int windings, bool connect)
+      : BaseFacade(std::forward<OtherRange>(r)),
+        windings_(windings),
+        connect_(connect) {}
+
+  // Default assignment operator
+  CircularRangeT& operator=(const CircularRangeT&) = default;
+  CircularRangeT& operator=(CircularRangeT&&) = default;
+  CircularRangeT(const CircularRangeT&) = default;
+  CircularRangeT(CircularRangeT&&) = default;
+
+ private:
+  friend class AliasRangeFacadePrivateAccess<CircularRangeT<BaseRange>>;
+
+  auto Begin(const BaseRange& base_range) const {
+    return CircIter(&base_range, 0);
+  }
+  auto End(const BaseRange& base_range) const {
+    auto e = CircIter(&base_range, windings_);
+    if (connect_ && e != Begin(base_range)) {
+      ++e;
+    }
+    return e;
+  }
+
+  int windings_ = 1;
+  bool connect_ = false;
+};
 
 // This convenient wrapper function produces a range of circular iterators from
 // a given range, wrapping around windings number of times. See CircularIterator
@@ -129,10 +174,9 @@ CircularIterator(Iter&& begin, Iter&& end)
 template <typename Range>
 auto CircularRange(Range&& range, int windings = 1) {
   assert(windings >= 0);
-  using std::begin;
-  using std::end;
-  return IteratorRange(CircularIterator(begin(range), end(range)),
-                       CircularIterator(begin(range), end(range), windings));
+  return CircularRangeT<decltype(MoveOrAliasRange(std::forward<Range>(range)))>(
+      MoveOrAliasRange(std::forward<Range>(range)), windings,
+      /*connect=*/false);
 }
 
 // This convenient wrapper function produces a range of  circular iterators from
@@ -141,8 +185,7 @@ auto CircularRange(Range&& range, int windings = 1) {
 template <typename Iter>
 auto CircularRange(const Iter& first, const Iter& last, int windings = 1) {
   assert(windings >= 0);
-  return IteratorRange(CircularIterator(first, last),
-                       CircularIterator(first, last, windings));
+  return CircularRange(MakeIteratorRange(first, last), windings);
 }
 
 // This convenient wrapper function produces a range of circular iterators from
@@ -151,15 +194,10 @@ auto CircularRange(const Iter& first, const Iter& last, int windings = 1) {
 //
 // Range [x0, x1, ..., xn] -> Range [x0, x1, ..., xn, x0].
 template <typename Range>
-auto CircularConnectRange(Range&& range) {
-  using std::begin;
-  using std::end;
-  CircularIterator b(begin(range), end(range));
-  CircularIterator e(begin(range), end(range), 1);
-  if (b != e) {
-    ++e;
-  }
-  return IteratorRange(std::move(b), std::move(e));
+auto CircularConnectRange(Range&& range, int windings = 1) {
+  assert(windings >= 0);
+  return CircularRangeT<decltype(MoveOrAliasRange(std::forward<Range>(range)))>(
+      MoveOrAliasRange(std::forward<Range>(range)), windings, /*connect=*/true);
 }
 
 // This convenient wrapper function produces a range of  circular iterators from
@@ -169,13 +207,9 @@ auto CircularConnectRange(Range&& range) {
 //
 // Range [x0, x1, ..., xn] -> Range [x0, x1, ..., xn, x0].
 template <typename Iter>
-auto CircularConnectRange(const Iter& first, const Iter& last) {
-  CircularIterator begin(first, last);
-  CircularIterator end(first, last, 1);
-  if (begin != end) {
-    ++end;
-  }
-  return IteratorRange(begin, end);
+auto CircularConnectRange(const Iter& first, const Iter& last,
+                          int windings = 1) {
+  return CircularConnectRange(MakeIteratorRange(first, last), windings);
 }
 
 }  // namespace genit

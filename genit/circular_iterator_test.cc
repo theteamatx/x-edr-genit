@@ -39,7 +39,7 @@ class NonAssignableType {
 };
 
 TEST(CircularIteratorTest, IteratorComparison) {
-  auto range = CircularRange(IndexIterator(0), IndexIterator(5));
+  auto range = CircularRange(IndexRange(0, 5));
   auto it = range.begin();
   auto it_end = range.end();
 
@@ -52,14 +52,14 @@ TEST(CircularIteratorTest, IteratorComparison) {
 }
 
 TEST(CircularIteratorTest, IteratorDereference) {
-  auto range = CircularRange(IndexIterator(0), IndexIterator(5));
+  auto range = CircularRange(IndexRange(0, 5));
   auto it = range.begin();
 
   EXPECT_EQ(*it, 0);
 }
 
 TEST(CircularIteratorTest, IteratorIncrementDecrement) {
-  auto range = CircularRange(IndexIterator(0), IndexIterator(5));
+  auto range = CircularRange(IndexRange(0, 5));
   auto it = range.begin();
 
   ++it;
@@ -96,7 +96,7 @@ TEST(CircularIteratorTest, IteratorIncrementDecrement) {
 }
 
 TEST(CircularIteratorTest, IteratorRandomAccess) {
-  auto range = CircularRange(IndexIterator(0), IndexIterator(5));
+  auto range = CircularRange(IndexRange(0, 5));
   auto it = range.begin();
   auto it_end = range.end();
 
@@ -157,7 +157,7 @@ TEST(CircularIteratorTest, IteratorFromContainer) {
 
 TEST(CircularIteratorTest, MultipleWindings) {
   constexpr int n_windings = 7;
-  auto range = CircularRange(IndexIterator(0), IndexIterator(6), n_windings);
+  auto range = CircularRange(IndexRange(0, 6), n_windings);
 
   int counter = 0;
   for (const int n : range) {
@@ -203,9 +203,8 @@ TEST(CircularIteratorTest, ValueIncrementIterator) {
 TEST(CircularIteratorTest, IteratorNonAssignableType) {
   auto get_non_assignable = [](int x) { return NonAssignableType(x); };
 
-  auto range = CircularRange(
-      MakeTransformIterator(IndexIterator(0), std::cref(get_non_assignable)),
-      MakeTransformIterator(IndexIterator(5), std::cref(get_non_assignable)));
+  auto range =
+      CircularRange(TransformRange(IndexRange(0, 5), get_non_assignable));
 
   int expected = 0;
   for (auto t : range) {

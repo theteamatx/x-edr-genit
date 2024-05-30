@@ -35,8 +35,7 @@ class NonAssignableType {
 };
 
 TEST(AdjacentIteratorTest, TripleIteratorComparison) {
-  auto triplet_range =
-      AdjacentElementsRange<3>(IndexIterator(0), IndexIterator(5));
+  auto triplet_range = AdjacentElementsRange<3>(IndexRange(0, 5));
   auto it = triplet_range.begin();
   auto it_end = triplet_range.end();
 
@@ -49,8 +48,7 @@ TEST(AdjacentIteratorTest, TripleIteratorComparison) {
 }
 
 TEST(AdjacentIteratorTest, TripleIteratorDereference) {
-  auto triplet_range =
-      AdjacentElementsRange<3>(IndexIterator(0), IndexIterator(5));
+  auto triplet_range = AdjacentElementsRange<3>(IndexRange(0, 5));
   auto it = triplet_range.begin();
 
   auto value = *it;
@@ -76,8 +74,7 @@ TEST(AdjacentIteratorTest, TripleIteratorDereference) {
 }
 
 TEST(AdjacentIteratorTest, TripleIteratorIncrementDecrement) {
-  auto triplet_range =
-      AdjacentElementsRange<3>(IndexIterator(0), IndexIterator(5));
+  auto triplet_range = AdjacentElementsRange<3>(IndexRange(0, 5));
   auto it = triplet_range.begin();
 
   ++it;
@@ -114,8 +111,7 @@ TEST(AdjacentIteratorTest, TripleIteratorIncrementDecrement) {
 }
 
 TEST(AdjacentIteratorTest, TripleIteratorRandomAccess) {
-  auto triplet_range =
-      AdjacentElementsRange<3>(IndexIterator(0), IndexIterator(5));
+  auto triplet_range = AdjacentElementsRange<3>(IndexRange(0, 5));
   auto it = triplet_range.begin();
   auto it_end = triplet_range.end();
 
@@ -200,8 +196,7 @@ TEST(AdjacentIteratorTest, TripleIteratorNonAssignableType) {
   auto get_non_assignable = [](int) { return NonAssignableType(); };
 
   auto triplet_range = AdjacentElementsRange<3>(
-      MakeTransformIterator(IndexIterator(0), std::cref(get_non_assignable)),
-      MakeTransformIterator(IndexIterator(5), std::cref(get_non_assignable)));
+      TransformRange(IndexRange(0, 5), get_non_assignable));
 
   for (auto triplet : triplet_range) {
     EXPECT_EQ(triplet.size(), 3);

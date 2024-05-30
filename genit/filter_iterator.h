@@ -38,78 +38,111 @@
 
 namespace genit {
 
-template <typename BaseIterator, typename Predicate>
+// Forward-decl.
+template <typename BaseRange, typename Predicate>
+class FilteredRange;
+
+template <typename BaseRange, typename Predicate>
 class FilterIterator
     : public IteratorFacade<
-          FilterIterator<BaseIterator, Predicate>,
-          typename std::iterator_traits<BaseIterator>::reference,
+          FilterIterator<BaseRange, Predicate>,
+          typename std::iterator_traits<
+              RangeIteratorType<BaseRange>>::reference,
           zip_iterator_detail::LeastPermissive<
               std::bidirectional_iterator_tag,
               zip_iterator_detail::ReduceToStdIterCategory<
                   typename std::iterator_traits<
-                      BaseIterator>::iterator_category>>> {
+                      RangeIteratorType<BaseRange>>::iterator_category>>> {
  public:
-  template <typename Iterator, typename InputPredicate>
-  FilterIterator(Iterator&& it, Iterator&& end, InputPredicate&& predicate)
-      : end_(std::forward<Iterator>(end)), it_(std::forward<Iterator>(it)),
-        pred_(std::forward<InputPredicate>(predicate)) {
-    while (it_ != end_ && !pred_(*it_)) {
+  FilterIterator(RangeIteratorType<BaseRange> it,
+                 const FilteredRange<BaseRange, Predicate>* parent)
+      : it_(std::move(it)), parent_(parent) {
+    while (it_ != parent_->BaseEnd() && !parent_->EvaluatePredicate(*it_)) {
       ++it_;
     }
   }
 
-  // The C++ standard requires C++ iterators to be copy-assignable, which
-  // can only be done if the unary functor is copy-assignable.
-  // A reference-wrapper (std::ref / std::cref) can be used to circumvent this
-  // by the caller, if applicable. std::function is another option.
-  static_assert(std::is_copy_assignable_v<Predicate>,
-                "The predicate must be copy-assignable to fulfill standard "
-                "requirements on this iterator type");
-
  private:
   friend class IteratorFacadePrivateAccess<FilterIterator>;
 
-  using OutputRefType = typename std::iterator_traits<BaseIterator>::reference;
+  using OutputRefType =
+      typename std::iterator_traits<RangeIteratorType<BaseRange>>::reference;
 
   OutputRefType Dereference() const { return *it_; }
   void Increment() {
-    while (++it_ != end_ && !pred_(*it_)) {
+    while (++it_ != parent_->BaseEnd() && !parent_->EvaluatePredicate(*it_)) {
     }
   }
   void Decrement() {
-    while (!pred_(*--it_)) {
+    while (!parent_->EvaluatePredicate(*--it_)) {
     }
   }
   bool IsEqual(const FilterIterator& other) const { return it_ == other.it_; }
 
-  BaseIterator end_;
-  BaseIterator it_;
+  RangeIteratorType<BaseRange> it_;
+  const FilteredRange<BaseRange, Predicate>* parent_ = nullptr;
+};
+
+template <typename BaseRange, typename Predicate>
+class FilteredRange
+    : public AliasRangeFacade<FilteredRange<BaseRange, Predicate>, BaseRange,
+                              FilterIterator<BaseRange, Predicate>> {
+ public:
+  using FiltIter = FilterIterator<BaseRange, Predicate>;
+  using BaseFacade = AliasRangeFacade<FilteredRange<BaseRange, Predicate>,
+                                      BaseRange, FiltIter>;
+
+  // Constructor from a Range
+  template <typename OtherRange, typename OtherPredicate>
+  explicit FilteredRange(OtherRange&& r, OtherPredicate&& pred)
+      : BaseFacade(std::forward<OtherRange>(r)),
+        pred_(std::forward<OtherPredicate>(pred)) {}
+
+  // Default assignment operator
+  FilteredRange& operator=(const FilteredRange&) = default;
+  FilteredRange& operator=(FilteredRange&&) = default;
+  FilteredRange(const FilteredRange&) = default;
+  FilteredRange(FilteredRange&&) = default;
+
+ private:
+  friend class AliasRangeFacadePrivateAccess<
+      FilteredRange<BaseRange, Predicate>>;
+  friend class FilterIterator<BaseRange, Predicate>;
+
+  auto Begin(const BaseRange& base_range) const {
+    using std::begin;
+    return FiltIter(begin(base_range), this);
+  }
+  auto End(const BaseRange& base_range) const {
+    using std::end;
+    return FiltIter(end(base_range), this);
+  }
+
+  auto BaseEnd() const {
+    using std::end;
+    return end(this->base_range_);
+  }
+  bool EvaluatePredicate(
+      typename std::iterator_traits<RangeIteratorType<BaseRange>>::reference
+          value) const {
+    return pred_(value);
+  }
+
   Predicate pred_;
 };
 
-// Deduction guide
-template <typename BaseIterator, typename Predicate>
-FilterIterator(BaseIterator&& it, BaseIterator&& end, Predicate&& predicate)
-    -> FilterIterator<std::decay_t<BaseIterator>, std::decay_t<Predicate>>;
-
-template <typename BaseIterator, typename Predicate>
-auto MakeFilterIterator(BaseIterator&& it, BaseIterator&& end,
-                        Predicate&& pred) {
-  return FilterIterator<std::decay_t<BaseIterator>, std::decay_t<Predicate>>(
-      std::forward<BaseIterator>(it), std::forward<BaseIterator>(end),
+template <typename Range, typename Predicate>
+auto FilterRange(Range&& range, Predicate&& pred) {
+  return FilteredRange<decltype(MoveOrAliasRange(std::forward<Range>(range))),
+                       std::decay_t<Predicate>>(
+      MoveOrAliasRange(std::forward<Range>(range)),
       std::forward<Predicate>(pred));
 }
 
-template <typename Range, typename Predicate>
-auto FilterRange(Range&& range, Predicate&& pred) {
-  using std::begin;
-  using std::end;
-  return IteratorRange(MakeFilterIterator(begin(std::forward<Range>(range)),
-                                          end(std::forward<Range>(range)),
-                                          std::forward<Predicate>(pred)),
-                       MakeFilterIterator(end(std::forward<Range>(range)),
-                                          end(std::forward<Range>(range)),
-                                          std::forward<Predicate>(pred)));
+template <typename BaseIter, typename Predicate>
+auto FilterRange(BaseIter&& first, BaseIter&& last, Predicate&& pred) {
+  return FilterRange(MakeIteratorRange(first, last),
+                     std::forward<Predicate>(pred));
 }
 
 }  // namespace genit

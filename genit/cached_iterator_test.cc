@@ -33,10 +33,9 @@ TEST(CachedIteratorTest, SquaringIterator) {
     return i * i;
   };
 
-  auto it = MakeCachedIterator(
-      MakeTransformIterator(v.begin(), std::cref(squaring_func)));
-  auto it_end = MakeCachedIterator(
-      MakeTransformIterator(v.end(), std::cref(squaring_func)));
+  auto c_range = CachedRange(TransformRange(v, squaring_func));
+  auto it = c_range.begin();
+  auto it_end = c_range.end();
 
   EXPECT_TRUE((std::is_same_v<decltype(*it), int>));
   EXPECT_FALSE(std::is_rvalue_reference_v<decltype(*it)>);

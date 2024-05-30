@@ -191,6 +191,45 @@ auto MakeZipIterator(UnderlyingIters&&... iters) {
   return ZipIterator<std::decay_t<UnderlyingIters>...>(std::forward<UnderlyingIters>(iters)...);
 }
 
+// A ZippedRange is a range that combines multiple underlying ranges
+// into a single iterator that produces a tuple of the underlying values when
+// dereferenced.
+template <typename... Ranges>
+class ZippedRange
+    : public AliasRangeFacade<ZippedRange<Ranges...>, std::tuple<Ranges...>,
+                              ZipIterator<RangeIteratorType<Ranges>...>> {
+ public:
+  using BaseRange = std::tuple<Ranges...>;
+  using ZipIter = ZipIterator<RangeIteratorType<Ranges>...>;
+  using BaseFacade =
+      AliasRangeFacade<ZippedRange<Ranges...>, BaseRange, ZipIter>;
+
+  template <typename... OtherRanges>
+  explicit ZippedRange(OtherRanges&&... ranges)
+      : BaseFacade(
+            std::tuple<Ranges...>(std::forward<OtherRanges>(ranges)...)) {}
+
+ private:
+  friend class AliasRangeFacadePrivateAccess<ZippedRange<Ranges...>>;
+
+  auto Begin(const BaseRange& base_range) const {
+    return std::apply(
+        [](const Ranges&... base_ranges) {
+          using std::begin;
+          return ZipIter(begin(base_ranges)...);
+        },
+        base_range);
+  }
+  auto End(const BaseRange& base_range) const {
+    return std::apply(
+        [](const Ranges&... base_ranges) {
+          using std::end;
+          return ZipIter(end(base_ranges)...);
+        },
+        base_range);
+  }
+};
+
 // Factory function that conveniently creates a zip iterator range
 // using template argument deduction to infer the type of the underlying
 // ranges.
@@ -199,10 +238,8 @@ auto MakeZipIterator(UnderlyingIters&&... iters) {
 //   auto zip_range = ZipRange(v1, v2);
 template <typename... Ranges>
 auto ZipRange(Ranges&&... ranges) {
-  using std::begin;
-  using std::end;
-  return IteratorRange(MakeZipIterator(begin(std::forward<Ranges>(ranges))...),
-                       MakeZipIterator(end(std::forward<Ranges>(ranges))...));
+  return ZippedRange<decltype(MoveOrAliasRange(std::forward<Ranges>(
+      ranges)))...>(MoveOrAliasRange(std::forward<Ranges>(ranges))...);
 }
 
 // Factory function that conveniently creates an enumerated iterator range
