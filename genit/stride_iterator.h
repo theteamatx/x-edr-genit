@@ -18,6 +18,7 @@
 #define GENIT_STRIDE_ITERATOR_H_
 
 #include <iterator>
+#include <type_traits>
 
 #include "genit/iterator_facade.h"
 #include "genit/iterator_range.h"

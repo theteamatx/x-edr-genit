@@ -17,6 +17,7 @@
 #ifndef GENIT_NESTED_RANGE_H_
 #define GENIT_NESTED_RANGE_H_
 
+#include <cstddef>
 #include <iterator>
 #include <tuple>
 #include <type_traits>

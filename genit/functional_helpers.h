@@ -17,6 +17,7 @@
 #ifndef GENIT_FUNCTIONAL_HELPERS_H_
 #define GENIT_FUNCTIONAL_HELPERS_H_
 
+#include <cstddef>
 #include <tuple>
 #include <utility>
 

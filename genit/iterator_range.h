@@ -18,7 +18,6 @@
 #define GENIT_ITERATOR_RANGE_H_
 
 #include <algorithm>
-#include <cinttypes>
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
@@ -366,7 +365,7 @@ inline auto WrapRange(Range&& r) {
 // Move rvalue ranges, but alias lvalue ranges (cf. ref-wrapper).
 template <typename Range>
 inline RangeDecayType<Range> MoveOrAliasRange(Range&& r) {
-  return std::move(r);
+  return std::forward<Range>(r);
 }
 template <typename Range>
 inline RangeDecayType<Range> MoveOrAliasRange(const Range&& r) {
