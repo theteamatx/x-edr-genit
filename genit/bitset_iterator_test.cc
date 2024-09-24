@@ -14,14 +14,12 @@
 
 #include "genit/bitset_iterator.h"
 
-#include <forward_list>
+#include <climits>
+#include <cstdint>
 #include <ios>
-#include <iterator>
-#include <sstream>
+#include <limits>
+#include <vector>
 
-#include "genit/filter_iterator.h"
-#include "genit/iterator_range.h"
-#include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 namespace genit {

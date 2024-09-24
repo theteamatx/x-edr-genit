@@ -17,8 +17,10 @@
 #ifndef GENIT_ZIP_ITERATOR_H_
 #define GENIT_ZIP_ITERATOR_H_
 
+#include <cstddef>
 #include <iterator>
 #include <limits>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -188,7 +190,8 @@ ZipIterator(OtherIters... it) -> ZipIterator<std::decay_t<OtherIters>...>;
 //   auto zip_it = MakeZipIterator(v1.begin(), v2.begin());
 template <typename... UnderlyingIters>
 auto MakeZipIterator(UnderlyingIters&&... iters) {
-  return ZipIterator<std::decay_t<UnderlyingIters>...>(std::forward<UnderlyingIters>(iters)...);
+  return ZipIterator<std::decay_t<UnderlyingIters>...>(
+      std::forward<UnderlyingIters>(iters)...);
 }
 
 // A ZippedRange is a range that combines multiple underlying ranges

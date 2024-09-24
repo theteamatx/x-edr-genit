@@ -38,7 +38,6 @@
 
 #include <cassert>
 #include <iterator>
-#include <type_traits>
 
 #include "genit/iterator_facade.h"
 #include "genit/iterator_range.h"

@@ -14,8 +14,7 @@
 
 #include "genit/cached_iterator.h"
 
-#include <functional>
-#include <map>
+#include <type_traits>
 #include <vector>
 
 #include "genit/transform_iterator.h"

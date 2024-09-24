@@ -21,7 +21,7 @@
 #include <sstream>
 
 #include "genit/iterator_range.h"
-#include "gmock/gmock.h"
+#include "genit/zip_iterator.h"
 #include "gtest/gtest.h"
 
 namespace genit {

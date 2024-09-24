@@ -17,6 +17,8 @@
 #ifndef GENIT_CONCAT_RANGE_H_
 #define GENIT_CONCAT_RANGE_H_
 
+#include <array>
+#include <cstddef>
 #include <iterator>
 #include <tuple>
 #include <type_traits>

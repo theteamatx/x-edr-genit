@@ -15,6 +15,7 @@
 #include "genit/iterator_facade.h"
 
 #include <iterator>
+#include <type_traits>
 
 #include "gtest/gtest.h"
 

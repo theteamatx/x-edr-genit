@@ -14,9 +14,9 @@
 
 #include "genit/transform_iterator.h"
 
-#include <functional>
 #include <iterator>
 #include <map>
+#include <type_traits>
 #include <vector>
 
 #include "gtest/gtest.h"

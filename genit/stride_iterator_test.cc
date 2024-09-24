@@ -14,6 +14,7 @@
 
 #include "genit/stride_iterator.h"
 
+#include <type_traits>
 #include <vector>
 
 #include "gtest/gtest.h"

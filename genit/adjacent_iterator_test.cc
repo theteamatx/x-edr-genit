@@ -14,7 +14,7 @@
 
 #include "genit/adjacent_iterator.h"
 
-#include <functional>
+#include <type_traits>
 #include <vector>
 
 #include "genit/iterator_facade.h"

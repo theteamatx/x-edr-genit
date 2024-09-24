@@ -16,6 +16,8 @@
 
 #include <cstdint>
 #include <iterator>
+#include <tuple>
+#include <type_traits>
 #include <vector>
 
 #include "gtest/gtest.h"
