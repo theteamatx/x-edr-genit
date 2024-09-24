@@ -17,10 +17,12 @@
 #ifndef GENIT_BITSET_ITERATOR_H_
 #define GENIT_BITSET_ITERATOR_H_
 
+#include <climits>
 #include <type_traits>
 
 #include "genit/filter_iterator.h"
 #include "genit/iterator_facade.h"
+#include "genit/iterator_range.h"
 
 namespace genit {
 

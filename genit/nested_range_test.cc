@@ -16,21 +16,17 @@
 
 #include <array>
 #include <forward_list>
-#include <functional>
 #include <iterator>
 #include <list>
-#include <sstream>
+#include <type_traits>
 #include <vector>
 
-#include "genit/iterator_range.h"
-#include "genit/zip_iterator.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
 namespace genit {
 namespace {
 
-using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::DoubleNear;
 using ::testing::Ne;

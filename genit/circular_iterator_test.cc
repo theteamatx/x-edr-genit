@@ -14,9 +14,8 @@
 
 #include "genit/circular_iterator.h"
 
-#include <algorithm>
-#include <functional>
 #include <iterator>
+#include <type_traits>
 #include <vector>
 
 #include "genit/iterator_facade.h"

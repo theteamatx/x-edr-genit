@@ -16,14 +16,11 @@
 
 #include <array>
 #include <forward_list>
-#include <functional>
 #include <iterator>
 #include <list>
-#include <sstream>
+#include <type_traits>
 #include <vector>
 
-#include "genit/iterator_range.h"
-#include "genit/zip_iterator.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
@@ -260,7 +257,7 @@ TEST(ConcatRange, CommonType) {
 
 TEST(ConcatRange, ConcatVariousRangeTypes) {
   const std::vector<int> xs = {1, 2, 3};
-  std::vector<const int> ys = {4, 5, 6};
+  const std::vector<int> ys = {4, 5, 6};
   std::vector<ConvertibleType> zs;
   zs.emplace_back(7);
   zs.emplace_back(8);

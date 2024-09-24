@@ -37,7 +37,6 @@
 #define GENIT_ADJACENT_CIRCULAR_ITERATOR_H_
 
 #include <iterator>
-#include <type_traits>
 
 #include "genit/adjacent_iterator.h"
 #include "genit/iterator_facade.h"
