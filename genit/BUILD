@@ -38,8 +38,8 @@ cc_library(
         "zip_iterator.h",
     ],
     deps = [
-        "@abseil-cpp//absl/types:variant",
-        "@abseil-cpp//absl/utility",
+        "@com_google_absl//absl/types:variant",
+        "@com_google_absl//absl/utility",
     ],
 )
 
@@ -50,7 +50,7 @@ cc_test(
     ],
     deps = [
         ":iterators",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -61,7 +61,7 @@ cc_test(
     ],
     deps = [
         ":iterators",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -72,7 +72,7 @@ cc_test(
     ],
     deps = [
         ":iterators",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -83,7 +83,7 @@ cc_test(
     ],
     deps = [
         ":iterators",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -92,7 +92,7 @@ cc_test(
     srcs = ["concat_range_test.cc"],
     deps = [
         ":iterators",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -104,7 +104,7 @@ cc_test(
     ],
     deps = [
         ":iterators",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -123,9 +123,9 @@ cc_test(
     deps = [
         ":functional_helpers",
         ":iterators",
-        "@abseil-cpp//absl/functional:any_invocable",
-        "@abseil-cpp//absl/memory",
-        "@googletest//:gtest_main",
+        "@com_google_absl//absl/functional:any_invocable",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -136,7 +136,7 @@ cc_test(
     ],
     deps = [
         ":iterators",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -147,7 +147,7 @@ cc_test(
     ],
     deps = [
         ":iterators",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -156,7 +156,7 @@ cc_test(
     srcs = ["nested_range_test.cc"],
     deps = [
         ":iterators",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -167,7 +167,7 @@ cc_test(
     ],
     deps = [
         ":iterators",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -178,7 +178,7 @@ cc_test(
     ],
     deps = [
         ":iterators",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
 
@@ -189,6 +189,6 @@ cc_test(
     ],
     deps = [
         ":iterators",
-        "@googletest//:gtest_main",
+        "@com_google_googletest//:gtest_main",
     ],
 )
